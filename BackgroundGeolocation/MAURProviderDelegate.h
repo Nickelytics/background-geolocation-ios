@@ -25,8 +25,8 @@ typedef NS_ENUM(NSInteger, MAURBGErrorCode) {
 typedef NS_ENUM(NSInteger, MAURLocationAuthorizationStatus) {
     MAURLocationAuthorizationDenied = 0,
     MAURLocationAuthorizationAllowed = 1,
-    MAURLocationAuthorizationAlways = MAURLocationAuthorizationAllowed,
     MAURLocationAuthorizationForeground = 2,
+    MAURLocationAuthorizationAlways = 3, // MAURLocationAuthorizationAllowed,
     MAURLocationAuthorizationNotDetermined = 99,
 };
 
