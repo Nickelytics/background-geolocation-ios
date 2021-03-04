@@ -54,16 +54,6 @@ static NSString * const Domain = @"com.marianhello";
 - (BOOL) onStart:(NSError * __autoreleasing *)outError
 {
     DDLogInfo(@"%@ will start", TAG);
-    CLAuthorizationStatus status = [CLLocationManager authorizationStatus];
-    DDLogInfo(@"%@ Raw Location Provider start authStatus: %d", TAG, status);
-    DDLogInfo(@"%@ Raw Location Provider kCLAuthorizationStatusAuthorizedAlways: %d", TAG, kCLAuthorizationStatusAuthorizedAlways);
-    // if (status != kCLAuthorizationStatusAuthorizedAlways) {
-        CLLocationManager *locManager = [[CLLocationManager alloc] init];
-        if ([locManager respondsToSelector:@selector(requestAlwaysAuthorization)]) {  //iOS 8.0+
-            DDLogInfo(@"%@ requestAlwaysAuthorization", TAG);
-            [locManager requestAlwaysAuthorization];
-        }
-    // }
     if (!isStarted) {
         [locationManager stopMonitoringSignificantLocationChanges];
         isStarted = [locationManager start:outError];
