@@ -18,28 +18,28 @@
 
 @interface MAURBackgroundGeolocationFacade : NSObject
 
-@property (weak, nonatomic) id<MAURProviderDelegate> delegate;
+@property (weak, nonatomic) id<MAURProviderDelegate> _Nullable delegate;
 
-- (BOOL) configure:(MAURConfig*)config error:(NSError * __autoreleasing *)outError;
-- (BOOL) start:(NSError * __autoreleasing *)outError;
-- (BOOL) stop:(NSError * __autoreleasing *)outError;
+- (BOOL) configure:(MAURConfig*_Nullable)config error:(NSError * _Nullable __autoreleasing *_Nullable)outError;
+- (BOOL) start:(NSError * _Nullable __autoreleasing *_Nullable)outError;
+- (BOOL) stop:(NSError * _Nullable __autoreleasing *_Nullable)outError;
 - (BOOL) locationServicesEnabled;
-- (MAURLocationAuthorizationStatus) authorizationStatus;
+- (CLAuthorizationStatus) authorizationStatus;
 - (BOOL) isStarted;
 - (void) showAppSettings;
 - (void) showLocationSettings;
 - (void) switchMode:(MAUROperationalMode)mode;
-- (MAURLocation*)getStationaryLocation;
-- (NSArray<MAURLocation*>*) getLocations;
-- (NSArray<MAURLocation*>*) getValidLocations;
-- (BOOL) deleteLocation:(NSNumber*)locationId error:(NSError * __autoreleasing *)outError;
-- (BOOL) deleteAllLocations:(NSError * __autoreleasing *)outError;
-- (MAURLocation*)getCurrentLocation:(int)timeout maximumAge:(long)maximumAge
+- (MAURLocation*_Nullable)getStationaryLocation;
+- (NSArray<MAURLocation*>*_Nullable) getLocations;
+- (NSArray<MAURLocation*>*_Nullable) getValidLocations;
+- (BOOL) deleteLocation:(NSNumber*_Nullable)locationId error:(NSError * _Nullable __autoreleasing *_Nullable)outError;
+- (BOOL) deleteAllLocations:(NSError * _Nullable __autoreleasing *_Nullable)outError;
+- (MAURLocation*_Nullable)getCurrentLocation:(int)timeout maximumAge:(long)maximumAge
                  enableHighAccuracy:(BOOL)enableHighAccuracy
-                              error:(NSError * __autoreleasing *)outError;
-- (MAURConfig*) getConfig;
-- (NSArray*) getLogEntries:(NSInteger)limit;
-- (NSArray*) getLogEntries:(NSInteger)limit fromLogEntryId:(NSInteger)entryId minLogLevelFromString:(NSString *)minLogLevel;
+                                       error:(NSError * _Nullable __autoreleasing *_Nullable)outError;
+- (MAURConfig*_Nullable) getConfig;
+- (NSArray*_Nullable) getLogEntries:(NSInteger)limit;
+- (NSArray*_Nullable) getLogEntries:(NSInteger)limit fromLogEntryId:(NSInteger)entryId minLogLevelFromString:(NSString *_Nullable)minLogLevel;
 - (void) forceSync;
 - (void) onAppTerminate;
 

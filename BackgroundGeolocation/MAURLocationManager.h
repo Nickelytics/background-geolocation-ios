@@ -12,7 +12,7 @@
 // protocol for sending location updates to another view controller
 @protocol MAURLocationManagerDelegate
 @required
-- (void) onAuthorizationChanged:(MAURLocationAuthorizationStatus)authStatus;
+- (void) onAuthorizationChanged:(CLAuthorizationStatus)authStatus;
 - (void) onLocationsChanged:(NSArray*)locations;
 - (void) onError:(NSError*)error;
 - (void) onLocationPause:(CLLocationManager*)manager;

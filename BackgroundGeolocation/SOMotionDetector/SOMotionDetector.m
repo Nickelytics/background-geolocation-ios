@@ -96,7 +96,7 @@ CGFloat kMinimumRunningAcceleration = 3.5f;
     [self.motionManager startAccelerometerUpdatesToQueue:[[NSOperationQueue alloc] init]
                                              withHandler:^(CMAccelerometerData *accelerometerData, NSError *error)
      {
-         _acceleration = accelerometerData.acceleration;
+        self->_acceleration = accelerometerData.acceleration;
          [self calculateMotionType];
          dispatch_async(dispatch_get_main_queue(), ^{
 #pragma GCC diagnostic push
@@ -146,8 +146,8 @@ CGFloat kMinimumRunningAcceleration = 3.5f;
                         break;
                 }
 
-                _motionActivity.motionType = motionType;
-                _motionActivity.confidence = activity.confidence;
+                self->_motionActivity.motionType = motionType;
+                self->_motionActivity.confidence = activity.confidence;
                 
                 // If type was changed, then call delegate method
                 if (motionType != self.previousMotionType) {

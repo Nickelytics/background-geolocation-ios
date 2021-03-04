@@ -40,6 +40,7 @@
 #define POSITION_UNAVAILABLE    2
 #define TIMEOUT                 3
 
+
 static NSString * const BGGeolocationDomain = @"com.marianhello";
 static NSString * const TAG = @"BgGeo";
 
@@ -51,12 +52,12 @@ FMDBLogger *sqliteLogger;
 @implementation MAURBackgroundGeolocationFacade {
     BOOL isStarted;
     MAUROperationalMode operationMode;
-    
+
     UILocalNotification *localNotification;
-    
+
     // configurable options
     MAURConfig *_config;
-    
+
     MAURLocation *stationaryLocation;
     MAURAbstractLocationProvider<MAURLocationProvider> *locationProvider;
     MAURPostLocationTask *postLocationTask;
@@ -66,56 +67,55 @@ FMDBLogger *sqliteLogger;
 - (instancetype) init
 {
     self = [super init];
-    
+
     if (self == nil) {
         return self;
     }
-    
+
     [DDLog addLogger:[DDASLLogger sharedInstance] withLevel:DDLogLevelInfo];
     [DDLog addLogger:[DDTTYLogger sharedInstance] withLevel:DDLogLevelDebug];
-    
+
     sqliteLogger = [[FMDBLogger alloc] initWithLogDirectory:[self loggerDirectory]];
     sqliteLogger.saveThreshold     = 1;
     sqliteLogger.saveInterval      = 0;
     sqliteLogger.maxAge            = 60 * 60 * 24 * 7; //  7 days
     sqliteLogger.deleteInterval    = 60 * 60 * 24;     //  1 day
     sqliteLogger.deleteOnEverySave = NO;
-    
+
     [DDLog addLogger:sqliteLogger withLevel:DDLogLevelDebug];
-    
+
     MAHUncaughtExceptionLogger *logger = mah_get_uncaught_exception_logger();
     logger->setEnabled(YES);
-    
+
     postLocationTask = [[MAURPostLocationTask alloc] init];
     postLocationTask.delegate = self;
-    
+
     localNotification = [[UILocalNotification alloc] init];
     localNotification.timeZone = [NSTimeZone defaultTimeZone];
-    
+
     isStarted = NO;
-    
+
     return self;
 }
 
 /**
  * configure manager
- * @param {Config} configuration
- * @param {NSError} optional error
+ * @param config configuration
  */
 - (BOOL) configure:(MAURConfig*)config error:(NSError * __autoreleasing *)outError
 {
     __block NSError *error = nil;
-    
+
     MAURConfig *currentConfig = [self getConfig];
     _config = [MAURConfig merge:currentConfig withConfig:config];
-    
+
     DDLogInfo(@"%@ #configure: %@", TAG, _config);
-    
+
     postLocationTask.config = _config;
-    
+
     MAURSQLiteConfigurationDAO* configDAO = [MAURSQLiteConfigurationDAO sharedInstance];
     [configDAO persistConfiguration:_config];
-    
+
     // ios 8 requires permissions to send local-notifications
     if ([_config isDebugging]) {
         [self runOnMainThread:^{
@@ -131,31 +131,31 @@ FMDBLogger *sqliteLogger;
             }
         }];
     }
-    
+
     if (isStarted) {
         // Note: CLLocationManager must be created on a thread with an active run loop (main thread)
         [self runOnMainThread:^{
-            
+
             // requesting new provider
-            if (![currentConfig.locationProvider isEqual:_config.locationProvider]) {
-                [locationProvider onDestroy]; // destroy current provider
-                locationProvider = [self getProvider:_config.locationProvider.intValue error:&error];
+            if (![currentConfig.locationProvider isEqual:self->_config.locationProvider]) {
+                [self->locationProvider onDestroy]; // destroy current provider
+                self->locationProvider = [self getProvider:self->_config.locationProvider.intValue error:&error];
             }
-            
-            if (locationProvider == nil) {
+
+            if (self->locationProvider == nil) {
                 return;
             }
-            
+
             // trap configuration errors
-            if (![locationProvider onConfigure:_config error:&error]) {
+            if (![self->locationProvider onConfigure:self->_config error:&error]) {
                 return;
             }
-            
-            isStarted = [locationProvider onStart:&error];
-            locationProvider.delegate = self;
+
+            self->isStarted = [self->locationProvider onStart:&error];
+            self->           locationProvider.delegate = self;
         }];
     }
-    
+
     if (error != nil) {
         if (outError != nil) {
             NSDictionary *userInfo = @{
@@ -164,10 +164,10 @@ FMDBLogger *sqliteLogger;
                                        };
             *outError = [NSError errorWithDomain:BGGeolocationDomain code:MAURBGConfigureError userInfo:userInfo];
         }
-        
+
         return NO;
     }
-    
+
     return YES;
 }
 
@@ -179,43 +179,43 @@ FMDBLogger *sqliteLogger;
 - (BOOL) start:(NSError * __autoreleasing *)outError
 {
     DDLogInfo(@"%@ #start: %d", TAG, isStarted);
-    
+
     if (isStarted) {
         return NO;
     }
-    
+
     __block NSError *error = nil;
     MAURConfig *config = [self getConfig];
-    
+
     postLocationTask.config = config;
     [postLocationTask start];
-    
+
     // Note: CLLocationManager must be created on a thread with an active run loop (main thread)
     [self runOnMainThread:^{
-        locationProvider = [self getProvider:config.locationProvider.intValue error:&error];
-        
-        if (locationProvider == nil) {
+        self->locationProvider = [self getProvider:config.locationProvider.intValue error:&error];
+
+        if (self->locationProvider == nil) {
             return;
         }
-        
+
         // trap configuration errors
-        if (![locationProvider onConfigure:config error:&error]) {
+        if (![self->locationProvider onConfigure:config error:&error]) {
             return;
         }
-        
-        isStarted = [locationProvider onStart:&error];
-        locationProvider.delegate = self;
+
+        self->isStarted = [self->locationProvider onStart:&error];
+        self->       locationProvider.delegate = self;
     }];
-    
-    
+
+
     if (!isStarted) {
         if (outError != nil) {
             *outError = error;
         }
-        
+
         return NO;
     }
-    
+
     return isStarted;
 }
 
@@ -225,17 +225,17 @@ FMDBLogger *sqliteLogger;
 - (BOOL) stop:(NSError * __autoreleasing *)outError
 {
     DDLogInfo(@"%@ #stop", TAG);
-    
+
     if (!isStarted) {
         return YES;
     }
-    
+
     [postLocationTask stop];
-    
+
     [self runOnMainThread:^{
-        isStarted = ![locationProvider onStop:outError];
+        self->isStarted = ![self->locationProvider onStop:outError];
     }];
-    
+
     return isStarted;
 }
 
@@ -245,17 +245,17 @@ FMDBLogger *sqliteLogger;
 - (void) switchMode:(MAUROperationalMode)mode
 {
     DDLogInfo(@"%@ #switchMode %lu", TAG, (unsigned long)mode);
-    
+
     operationMode = mode;
-    
+
     if (!isStarted) return;
-    
+
     if ([self getConfig].isDebugging) {
-        AudioServicesPlaySystemSound (operationMode  == MAURForegroundMode ? paceChangeYesSound : paceChangeNoSound);
+        // AudioServicesPlaySystemSound (operationMode  == MAURForegroundMode ? paceChangeYesSound : paceChangeNoSound);
     }
-    
+
     [self runOnMainThread:^{
-        [locationProvider onSwitchMode:mode];
+        [self->locationProvider onSwitchMode:mode];
     }];
 }
 
@@ -264,23 +264,24 @@ FMDBLogger *sqliteLogger;
     if ([CLLocationManager respondsToSelector:@selector(locationServicesEnabled)]) { // iOS 4.x
         return [CLLocationManager locationServicesEnabled];
     }
-    
+
     return NO;
 }
 
-- (MAURLocationAuthorizationStatus) authorizationStatus
+- (CLAuthorizationStatus) authorizationStatus
 {
     CLAuthorizationStatus authStatus = [CLLocationManager authorizationStatus];
     switch (authStatus) {
         case kCLAuthorizationStatusNotDetermined:
-            return MAURLocationAuthorizationNotDetermined;
+            return kCLAuthorizationStatusNotDetermined;
         case kCLAuthorizationStatusRestricted:
+            return kCLAuthorizationStatusRestricted;
         case kCLAuthorizationStatusDenied:
-            return MAURLocationAuthorizationDenied;
+            return kCLAuthorizationStatusDenied;
         case kCLAuthorizationStatusAuthorizedAlways:
-            return MAURLocationAuthorizationAlways;
+            return kCLAuthorizationStatusAuthorizedAlways;
         case kCLAuthorizationStatusAuthorizedWhenInUse:
-            return MAURLocationAuthorizationForeground;
+            return kCLAuthorizationStatusAuthorizedWhenInUse;
     }
 }
 
@@ -367,7 +368,7 @@ FMDBLogger *sqliteLogger;
 {
     __block NSError *error = nil;
     __block CLLocation *location = nil;
-    
+
     dispatch_semaphore_t sema = dispatch_semaphore_create(0);
     [self runOnMainThread:^{
         CLLocation *currentLocation = [MAURLocationManager sharedInstance].locationManager.location;
@@ -426,7 +427,7 @@ FMDBLogger *sqliteLogger;
             _config = [[MAURConfig alloc] initWithDefaults];
         }
     }
-    
+
     return _config;
 }
 
@@ -478,7 +479,7 @@ FMDBLogger *sqliteLogger;
 {
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES);
     NSString *basePath = ([paths count] > 0) ? [paths objectAtIndex:0] : NSTemporaryDirectory();
-    
+
     return [basePath stringByAppendingPathComponent:@"SQLiteLogger"];
 }
 
@@ -486,9 +487,9 @@ FMDBLogger *sqliteLogger;
 {
     DDLogDebug(@"%@ #onStationaryChanged", TAG);
     stationaryLocation = location;
-    
+
     [postLocationTask add:location];
-    
+
     MAURConfig *config = [self getConfig];
     if ([config isDebugging]) {
         double distanceFilter = [MAURLocationManager sharedInstance].distanceFilter;
@@ -499,10 +500,10 @@ FMDBLogger *sqliteLogger;
                       [location.accuracy doubleValue],
                       [location.radius doubleValue]
                       ]];
-        
-        AudioServicesPlaySystemSound (locationSyncSound);
+
+        // AudioServicesPlaySystemSound (locationSyncSound);
     }
-    
+
     // Any javascript stationaryRegion event-listeners?
     if (self.delegate && [self.delegate respondsToSelector:@selector(onStationaryChanged:)]) {
         [self.delegate onStationaryChanged:location];
@@ -513,9 +514,9 @@ FMDBLogger *sqliteLogger;
 {
     DDLogDebug(@"%@ #onLocationChanged %@", TAG, location);
     stationaryLocation = nil;
-    
+
     [postLocationTask add:location];
-    
+
     MAURConfig *config = [self getConfig];
     if ([config isDebugging]) {
         double distanceFilter = [MAURLocationManager sharedInstance].distanceFilter;
@@ -525,17 +526,17 @@ FMDBLogger *sqliteLogger;
                       distanceFilter,
                       [location.accuracy doubleValue]
                       ]];
-        
-        AudioServicesPlaySystemSound (locationSyncSound);
+
+        // AudioServicesPlaySystemSound (locationSyncSound);
     }
-    
+
     // Delegate to main module
     if (self.delegate && [self.delegate respondsToSelector:@selector(onLocationChanged:)]) {
         [self.delegate onLocationChanged:location];
     }
 }
 
-- (void) onAuthorizationChanged:(MAURLocationAuthorizationStatus)authStatus
+- (void) onAuthorizationChanged:(CLAuthorizationStatus)authStatus
 {
     [self.delegate onAuthorizationChanged:authStatus];
 }
@@ -558,13 +559,14 @@ FMDBLogger *sqliteLogger;
 - (void) onActivityChanged:(MAURActivity *)activity
 {
     DDLogDebug(@"%@ #onActivityChanged %@", TAG, activity);
-    
+
     if ([self getConfig].isDebugging) {
         [self notify:[NSString stringWithFormat:@"%@ activity detected: %@ activity, confidence: %@", TAG, activity.type, activity.confidence]];
     }
-    
+
     [self.delegate onActivityChanged:activity];
 }
+
 
 /**@
  * If you don't stopMonitoring when application terminates, the app will be awoken still when a

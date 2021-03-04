@@ -36,12 +36,12 @@ static NSString * const Domain = @"com.marianhello";
 - (instancetype) init
 {
     self = [super init];
-    
+
     if (self) {
         isStarted = NO;
         isTracking = NO;
     }
-    
+
     return self;
 }
 
@@ -59,39 +59,43 @@ static NSString * const Domain = @"com.marianhello";
 - (BOOL) onConfigure:(MAURConfig*)config error:(NSError * __autoreleasing *)outError
 {
     DDLogVerbose(@"%@ configure", TAG);
-    
+
     locationManager.pausesLocationUpdatesAutomatically = [config pauseLocationUpdates];
     locationManager.activityType = [config decodeActivityType];
     locationManager.distanceFilter = config.distanceFilter.integerValue; // meters
     locationManager.desiredAccuracy = [config decodeDesiredAccuracy];
     [SOMotionDetector sharedInstance].activityDetectionInterval = config.activitiesInterval.intValue / 1000;
-    
+
     return YES;
 }
 
 - (BOOL) onStart:(NSError * __autoreleasing *)outError
 {
     DDLogInfo(@"%@ will start", TAG);
-    
+
+    CLAuthorizationStatus authStatus = [CLLocationManager authorizationStatus];
+
+    DDLogInfo(@"%@ start authStatus: %d", TAG, authStatus);
+    DDLogInfo(@"%@ start kCLAuthorizationStatusAuthorizedAlways: %d", TAG, kCLAuthorizationStatusAuthorizedAlways);
     if (!isStarted) {
         [[SOMotionDetector sharedInstance] startDetection];
         [self startTracking];
         isStarted = YES;
     }
-    
+
     return YES;
 }
 
 - (BOOL) onStop:(NSError * __autoreleasing *)outError
 {
     DDLogInfo(@"%@ will stop", TAG);
-    
+
     if (isStarted) {
         [[SOMotionDetector sharedInstance] stopDetection];
         [self stopTracking];
         isStarted = NO;
     }
-    
+
     return YES;
 }
 
@@ -122,7 +126,7 @@ static NSString * const Domain = @"com.marianhello";
     /* do nothing */
 }
 
-- (void) onAuthorizationChanged:(MAURLocationAuthorizationStatus)authStatus
+- (void) onAuthorizationChanged:(CLAuthorizationStatus)authStatus
 {
     [self.delegate onAuthorizationChanged:authStatus];
 }
@@ -170,12 +174,12 @@ static NSString * const Domain = @"com.marianhello";
             type = @"UNKNOWN";
             break;
     }
-    
+
     DDLogDebug(@"%@ activityTypeChanged: %@", TAG, type);
     MAURActivity *activity = [[MAURActivity alloc] init];
     activity.type = type;
     activity.confidence = [NSNumber numberWithInt:confidence];
-    
+
     [super.delegate onActivityChanged:activity];
 }
 

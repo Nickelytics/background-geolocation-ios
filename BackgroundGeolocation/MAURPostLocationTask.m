@@ -50,12 +50,12 @@ static MAURLocationTransform s_locationTransform = nil;
         // keep in mind this is called on a background thread
         // and if you are updating the UI it needs to happen
         // on the main thread:
-        hasConnectivity = YES;
+        self->hasConnectivity = YES;
         [_reach stopNotifier];
     };
     
     reach.unreachableBlock = ^(Reachability *reach) {
-        hasConnectivity = NO;
+        self->hasConnectivity = NO;
     };
 
     return self;
@@ -90,9 +90,9 @@ static MAURLocationTransform s_locationTransform = nil;
         
         MAURSQLiteLocationDAO *locationDAO = [MAURSQLiteLocationDAO sharedInstance];
         // TODO: investigate location id always 0
-        NSNumber *locationId = [locationDAO persistLocation:location limitRows:_config.maxLocations.integerValue];
+        NSNumber *locationId = [locationDAO persistLocation:location limitRows:self->_config.maxLocations.integerValue];
         
-        if (hasConnectivity && [self.config hasValidUrl]) {
+        if (self->hasConnectivity && [self.config hasValidUrl]) {
             NSError *error = nil;
             if ([self post:location toUrl:self.config.url withTemplate:self.config._template withHttpHeaders:self.config.httpHeaders error:&error]) {
                 if (locationId != nil) {
@@ -146,9 +146,9 @@ static MAURLocationTransform s_locationTransform = nil;
         DDLogDebug(@"Location was sent to the server, and received an \"HTTP 285 Updated Not Required\"");
         
         dispatch_async(dispatch_get_main_queue(), ^{
-            if (_delegate && [_delegate respondsToSelector:@selector(postLocationTaskRequestedAbortUpdates:)])
+            if (self->_delegate && [self->_delegate respondsToSelector:@selector(postLocationTaskRequestedAbortUpdates:)])
             {
-                [_delegate postLocationTaskRequestedAbortUpdates:self];
+                [self->_delegate postLocationTaskRequestedAbortUpdates:self];
             }
         });
     }
@@ -156,9 +156,9 @@ static MAURLocationTransform s_locationTransform = nil;
     if (statusCode == 401)
     {   
         dispatch_async(dispatch_get_main_queue(), ^{
-            if (_delegate && [_delegate respondsToSelector:@selector(postLocationTaskHttpAuthorizationUpdates:)])
+            if (self->_delegate && [self->_delegate respondsToSelector:@selector(postLocationTaskHttpAuthorizationUpdates:)])
             {
-                [_delegate postLocationTaskHttpAuthorizationUpdates:self];
+                [self->_delegate postLocationTaskHttpAuthorizationUpdates:self];
             }
         });
     }

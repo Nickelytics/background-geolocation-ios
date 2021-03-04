@@ -18,7 +18,7 @@ static NSString * const Domain = @"com.marianhello";
 
     BOOL isStarted;
     MAURLocationManager *locationManager;
-    
+
     MAURConfig *_config;
 }
 
@@ -36,6 +36,11 @@ static NSString * const Domain = @"com.marianhello";
 - (void) onCreate {
     locationManager = [MAURLocationManager sharedInstance];
     locationManager.delegate = self;
+
+    // CLAuthorizationStatus authStatus = [CLLocationManager authorizationStatus];
+
+    // DDLogInfo(@"%@ status is: authStatus: %d", TAG, authStatus);
+    // DDLogInfo(@"%@ status is: kCLAuthorizationStatusAuthorizedAlways: %d", TAG, kCLAuthorizationStatusAuthorizedAlways);
 }
 
 - (BOOL) onConfigure:(MAURConfig*)config error:(NSError * __autoreleasing *)outError
@@ -48,6 +53,10 @@ static NSString * const Domain = @"com.marianhello";
     locationManager.distanceFilter = config.distanceFilter.integerValue; // meters
     locationManager.desiredAccuracy = [config decodeDesiredAccuracy];
 
+    // CLAuthorizationStatus authStatus = [CLLocationManager authorizationStatus];
+
+    // DDLogInfo(@"%@ status is: authStatus: %d", TAG, authStatus);
+    // DDLogInfo(@"%@ status is: kCLAuthorizationStatusAuthorizedAlways: %d", TAG, kCLAuthorizationStatusAuthorizedAlways);
     return YES;
 }
 
@@ -55,6 +64,10 @@ static NSString * const Domain = @"com.marianhello";
 {
     DDLogInfo(@"%@ will start", TAG);
 
+    // CLAuthorizationStatus authStatus = [CLLocationManager authorizationStatus];
+
+    // DDLogInfo(@"%@ status is: authStatus: %d", TAG, authStatus);
+    // DDLogInfo(@"%@ status is: kCLAuthorizationStatusAuthorizedAlways: %d", TAG, kCLAuthorizationStatusAuthorizedAlways);
     if (!isStarted) {
         [locationManager stopMonitoringSignificantLocationChanges];
         isStarted = [locationManager start:outError];
@@ -87,13 +100,26 @@ static NSString * const Domain = @"com.marianhello";
     }
 }
 
-- (void) onAuthorizationChanged:(MAURLocationAuthorizationStatus)authStatus
+- (void) onAuthorizationChanged:(CLAuthorizationStatus)authStatus
 {
+
+
+    // CLAuthorizationStatus authStatus = [CLLocationManager authorizationStatus];
+
+    // DDLogInfo(@"%@ status is: authStatus: %d", TAG, authStatus);
+    // DDLogInfo(@"%@ status is: kCLAuthorizationStatusAuthorizedAlways: %d", TAG, kCLAuthorizationStatusAuthorizedAlways);
+
     [self.delegate onAuthorizationChanged:authStatus];
 }
 
 - (void) onLocationsChanged:(NSArray*)locations
 {
+
+
+    // CLAuthorizationStatus authStatus = [CLLocationManager authorizationStatus];
+
+    // DDLogInfo(@"%@ status is: authStatus: %d", TAG, authStatus);
+    // DDLogInfo(@"%@ status is: kCLAuthorizationStatusAuthorizedAlways: %d", TAG, kCLAuthorizationStatusAuthorizedAlways);
     for (CLLocation *location in locations) {
         MAURLocation *bgloc = [MAURLocation fromCLLocation:location];
         [self.delegate onLocationChanged:bgloc];
@@ -107,11 +133,23 @@ static NSString * const Domain = @"com.marianhello";
 
 - (void) onPause:(CLLocationManager*)manager
 {
+
+
+    // CLAuthorizationStatus authStatus = [CLLocationManager authorizationStatus];
+
+    // DDLogInfo(@"%@ status is: authStatus: %d", TAG, authStatus);
+    // DDLogInfo(@"%@ status is: kCLAuthorizationStatusAuthorizedAlways: %d", TAG, kCLAuthorizationStatusAuthorizedAlways);
     [self.delegate onLocationPause];
 }
 
 - (void) onResume:(CLLocationManager*)manager
 {
+
+
+    // CLAuthorizationStatus authStatus = [CLLocationManager authorizationStatus];
+
+    // DDLogInfo(@"%@ status is: authStatus: %d", TAG, authStatus);
+    // DDLogInfo(@"%@ status is: kCLAuthorizationStatusAuthorizedAlways: %d", TAG, kCLAuthorizationStatusAuthorizedAlways);
     [self.delegate onLocationResume];
 }
 

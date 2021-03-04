@@ -45,11 +45,13 @@ static NSString *const Domain = @"com.marianhello";
 {
     NSAssert([NSThread isMainThread], @"%@ %@", TAG, @"should only be called from the main thread.");
 
-    NSUInteger authStatus;
-    
+    CLAuthorizationStatus authStatus = [CLLocationManager authorizationStatus];
+    NSLog(@"%@ start authStatus: %d", TAG, authStatus);
+    NSLog(@"%@ start kCLAuthorizationStatusAuthorizedAlways: %d", TAG, kCLAuthorizationStatusAuthorizedAlways);
+
     if ([CLLocationManager respondsToSelector:@selector(authorizationStatus)]) { // iOS 4.2+
-        authStatus = [CLLocationManager authorizationStatus];
-        
+        // authStatus = [CLLocationManager authorizationStatus];
+
         if (authStatus == kCLAuthorizationStatusDenied) {
             if (outError != NULL) {
                 NSDictionary *errorDictionary = @{
@@ -58,10 +60,10 @@ static NSString *const Domain = @"com.marianhello";
 
                 *outError = [NSError errorWithDomain:Domain code:MAURBGPermissionDenied userInfo:errorDictionary];
             }
-            
+
             return NO;
         }
-        
+
         if (authStatus == kCLAuthorizationStatusRestricted) {
             if (outError != NULL) {
                 NSDictionary *errorDictionary = @{
@@ -69,15 +71,15 @@ static NSString *const Domain = @"com.marianhello";
                                                   };
                 *outError = [NSError errorWithDomain:Domain code:MAURBGPermissionDenied userInfo:errorDictionary];
             }
-            
+
             return NO;
         }
-        
+
 #ifdef __IPHONE_8_0
         // we do startUpdatingLocation even though we might not get permissions granted
         // we can stop later on when recieved callback on user denial
         // it's neccessary to start call startUpdatingLocation in iOS < 8.0 to show user prompt!
-        
+
         if (authStatus == kCLAuthorizationStatusNotDetermined) {
             if ([locationManager respondsToSelector:@selector(requestAlwaysAuthorization)]) {  //iOS 8.0+
                 [locationManager requestAlwaysAuthorization];
@@ -85,7 +87,7 @@ static NSString *const Domain = @"com.marianhello";
         }
 #endif
     }
-    
+
     [locationManager startUpdatingLocation];
     return YES;
 }
@@ -198,6 +200,11 @@ static NSString *const Domain = @"com.marianhello";
 #pragma mark CLLocationManagerDelegate Methods
 - (void) locationManager:(CLLocationManager *)manager didUpdateLocations:(NSArray *)locations
 {
+
+    CLAuthorizationStatus authStatus = [CLLocationManager authorizationStatus];
+
+    NSLog(@"%@ start authStatus: %d", TAG, authStatus);
+    NSLog(@"%@ start kCLAuthorizationStatusAuthorizedAlways: %d", TAG, kCLAuthorizationStatusAuthorizedAlways);
     [self.delegate onLocationsChanged:locations];
 }
 
@@ -215,18 +222,23 @@ static NSString *const Domain = @"com.marianhello";
 
 - (void) locationManager:(CLLocationManager *)manager didChangeAuthorizationStatus:(CLAuthorizationStatus)status
 {
-    MAURLocationAuthorizationStatus authStatus;
-    
+    CLAuthorizationStatus authStatus = [CLLocationManager authorizationStatus];
+
+    NSLog(@"%@ start authStatus: %d", TAG, authStatus);
+    NSLog(@"%@ start kCLAuthorizationStatusAuthorizedAlways: %d", TAG, kCLAuthorizationStatusAuthorizedAlways);
     switch(status) {
+        case kCLAuthorizationStatusNotDetermined:
+            authStatus = kCLAuthorizationStatusNotDetermined;
         case kCLAuthorizationStatusRestricted:
+            authStatus = kCLAuthorizationStatusRestricted;
         case kCLAuthorizationStatusDenied:
-            authStatus = MAURLocationAuthorizationDenied;
+            authStatus = kCLAuthorizationStatusDenied;
             break;
         case kCLAuthorizationStatusAuthorizedAlways:
-            authStatus = MAURLocationAuthorizationAlways;
+            authStatus = kCLAuthorizationStatusAuthorizedAlways;
             break;
         case kCLAuthorizationStatusAuthorizedWhenInUse:
-            authStatus = MAURLocationAuthorizationForeground;
+            authStatus = kCLAuthorizationStatusAuthorizedWhenInUse;
             break;
         default:
             return;

@@ -23,11 +23,11 @@ typedef NS_ENUM(NSInteger, MAURBGErrorCode) {
 };
 
 typedef NS_ENUM(NSInteger, MAURLocationAuthorizationStatus) {
-    MAURLocationAuthorizationDenied = 0,
-    MAURLocationAuthorizationAllowed = 1,
-    MAURLocationAuthorizationAlways = MAURLocationAuthorizationAllowed,
-    MAURLocationAuthorizationForeground = 2,
-    MAURLocationAuthorizationNotDetermined = 99,
+    MAURLocationAuthorizationDenied = kCLAuthorizationStatusDenied,
+    MAURLocationAuthorizationRestriced = kCLAuthorizationStatusRestricted,
+    MAURLocationAuthorizationForeground = kCLAuthorizationStatusAuthorizedWhenInUse,
+    MAURLocationAuthorizationAlways = kCLAuthorizationStatusAuthorizedAlways,
+    MAURLocationAuthorizationNotDetermined = kCLAuthorizationStatusNotDetermined,
 };
 
 typedef NS_ENUM(NSInteger, MAUROperationalMode) {
@@ -37,7 +37,7 @@ typedef NS_ENUM(NSInteger, MAUROperationalMode) {
 
 @protocol MAURProviderDelegate <NSObject>
 
-- (void) onAuthorizationChanged:(MAURLocationAuthorizationStatus)authStatus;
+- (void) onAuthorizationChanged:(CLAuthorizationStatus)authStatus;
 - (void) onLocationChanged:(MAURLocation*)location;
 - (void) onStationaryChanged:(MAURLocation*)location;
 - (void) onLocationPause;
