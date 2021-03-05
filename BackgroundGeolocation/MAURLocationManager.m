@@ -50,7 +50,7 @@ static NSString *const Domain = @"com.marianhello";
     if ([CLLocationManager respondsToSelector:@selector(authorizationStatus)]) { // iOS 4.2+
         authStatus = [CLLocationManager authorizationStatus];
         
-        DDLogInfo(@"%@ LOCATION MANAGER start authStatus: %d", TAG, authStatus);
+        NSLog(@"%@ start authStatus: %lu", TAG, (unsigned long)authStatus);
         if (authStatus == kCLAuthorizationStatusDenied) {
             if (outError != NULL) {
                 NSDictionary *errorDictionary = @{
